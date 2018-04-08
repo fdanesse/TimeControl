@@ -1,0 +1,12 @@
+{
+    "categoria":"GTK;GNOME;Utility;", 
+    "url":"", 
+    "mimetypes":"", 
+    "version":"1", 
+    "path":"/home/flavio/BatovideWorkSpace/TimeControl", 
+    "descripcion":"", 
+    "nombre":"TimeControl", 
+    "autores":"Flavio Danesse <fdanesse@gmail.com>", 
+    "main":"TimeControl.py", 
+    "licencia":"GPL3"
+}
