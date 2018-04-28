@@ -3,16 +3,20 @@
 
 import sys
 import os
-from collections import OrderedDict
+import datetime
+
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
+
 from MenuBar import MenuBar
-from Notebook import Notebook
+from Tabla import Tabla
+from TablaSemana import TablaSemana
 
 from Global import adduser
 from Global import getDataUser
-from Info import Info
+from Global import addData
+from Global import getDataSemana
 
 BASE_PATH = os.path.dirname(__file__)
 
@@ -24,70 +28,94 @@ class TimeControl(Gtk.Window):
         Gtk.Window.__init__(self)
 
         self.set_title("TimeControl")
-        self.set_icon_from_file(os.path.join(BASE_PATH, "img", "timecontrol.png"))
+        self.set_icon_from_file(
+            os.path.join(BASE_PATH, "img", "timecontrol.png"))
         self.set_resizable(True)
-        self.set_size_request(640, 480)
         self.set_border_width(2)
         self.set_position(Gtk.WindowPosition.CENTER)
 
-        self.menuBar = MenuBar()
-        self.info = Info()
-        self.notebook = Notebook()
+        base_hbox = Gtk.HBox()
 
-        panel = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        panel.pack1(self.notebook, resize=True, shrink=False)
-        panel.pack2(self.info, resize=False, shrink=True)
+        self.menuBar = MenuBar()
+
+        self.calendario = Gtk.Calendar()
+        self.calendario.connect('day_selected', self.__changed_date)
+
+        frame = Gtk.Frame()
+        frame.set_label(' Ingreso de Datos: ')
+        frame.set_border_width(15)
+
+        hbox = Gtk.HBox()
+        hbox.set_border_width(15)
+        self.tabla = Tabla()
+        hbox.pack_start(self.tabla, True, False, 0)
+        frame.add(hbox)
 
         vbox = Gtk.VBox()
         vbox.pack_start(self.menuBar, False, False, 0)
-        vbox.pack_start(panel, True, True, 0)
+        vbox.pack_start(self.calendario, True, False, 0)
+        vbox.pack_start(frame, True, False, 0)
 
-        self.add(vbox)
+        self.tablasemana = TablaSemana()
+        base_hbox.pack_start(vbox, True, True, 0)
+        base_hbox.pack_start(self.tablasemana, True, True, 0)
 
-        self.show_all()
+        self.add(base_hbox)
 
         self.connect("delete-event", self.__salir)
-        self.menuBar.connect("adduser", self.__newUser)
-        self.menuBar.connect("viewuser", self.__viewUser)
+        self.menuBar.connect("newuser", self.__newUser)
+        self.tabla.connect("viewuser", self.__viewUser)
+        self.tabla.connect('save', self.__guardar)
+        self.show_all()
 
-        self._current_user = ''
-        self._current_dict = OrderedDict()
+    def __guardar(self, widget):
+        num, _dict = self.tabla.get_data()
+        dialog = Gtk.Dialog(parent=self.get_toplevel(),
+        flags=Gtk.DialogFlags.MODAL,
+        buttons=["OK", Gtk.ResponseType.OK])
+        dialog.set_border_width(15)
+        if addData(str(num), _dict):
+            label = Gtk.Label("Datos Almacenados.")
+            self.__viewUser(None, num)
+        else:            
+            label = Gtk.Label("Este Funcionario no Existe")
+        dialog.vbox.pack_start(label, True, True, 5)
+        dialog.vbox.show_all()
+        dialog.run()
+        dialog.destroy()
+            
+    def __get_date_to_string(self):
+        res = self.calendario.get_date()
+        f = '%s/%s/%s' % (res.day, res.month + 1, res.year)
+        fecha = datetime.datetime.strptime(f, '%d/%m/%Y')
+        return str(datetime.date.strftime(fecha, '%d/%m/%Y'))
 
-        self.notebook.hide() # Se hace visible cuando se cargan los datos
-        self.info.frame.hide() # Se hace visible cuando se cargan los datos
-        self.info.saldo.hide() # Se hace visible cuando se cargan los datos
+    def __changed_date(self, widget=False):
+        self.__viewUser(None, self.tabla.get_data()[0])
 
-        self.notebook.connect('switch_page', self.__switch_page)
-        self.notebook.connect('updateuser', self.__update)
+    def __viewUser(self, tabla, num):
+        fecha = self.__get_date_to_string()
+        data = getDataUser(str(num))
+        self.tabla.set_data(fecha, num, data)
+        
+        semana = datetime.datetime.strptime(fecha , '%d/%m/%Y').isocalendar()[1]
+        self.tablasemana.set_data(semana, getDataSemana(num, semana, data))
 
-    def __update(self, widget, _dict):
-        self.info.update(_dict)
-
-    def __switch_page(self, widget, widget_child, indice):
-        self.info.switch_page_and_set_user(self._current_user, indice, self._current_dict)
-
-    def __viewUser(self, widget, name):
-        self._current_user = name
-        self._current_dict = getDataUser(self._current_user)
-        self.notebook.set_data(self._current_user, self._current_dict)
-        self.info.switch_page_and_set_user(self._current_user, 0, self._current_dict)
-        self.notebook.show_all() # Se hace visible cuando se cargan los datos
-        self.info.show_all() # Se hace visible cuando se cargan los datos
-
-    def __newUser(self, widget, name):
-        if adduser(name):
-            self.menuBar.adduser(name)
+    def __newUser(self, widget, num, name):
+        dialog = Gtk.Dialog(parent=self.get_toplevel(),
+            flags=Gtk.DialogFlags.MODAL,
+            buttons=["OK", Gtk.ResponseType.OK])
+        dialog.set_border_width(15)
+        if adduser(num, name):
+            label = Gtk.Label("Usuario Almacenado")
         else:
-            dialog = Gtk.Dialog(parent=self.get_toplevel(),
-                flags=Gtk.DialogFlags.MODAL, buttons=["OK", Gtk.ResponseType.OK])
-            dialog.set_border_width(15)
             label = Gtk.Label("Este Funcionario ya Existe")
-            dialog.vbox.pack_start(label, True, True, 5)
-            dialog.vbox.show_all()
-            dialog.run()
-            dialog.destroy()
-        self.__viewUser(None, name)
-
+        dialog.vbox.pack_start(label, True, True, 5)
+        dialog.vbox.show_all()
+        dialog.run()
+        dialog.destroy()
+        self.__viewUser(None, num)
+        
     def __salir(self, widget=None, senial=None):
         Gtk.main_quit()
         sys.exit(0)
