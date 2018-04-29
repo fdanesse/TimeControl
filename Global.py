@@ -6,14 +6,15 @@ import json
 import time
 import datetime
 from collections import OrderedDict
-import calendar
 
 HOME = os.environ["HOME"]
 # BASE_PATH = os.path.dirname(__file__)
 
+
 PERSISTENCIA = os.path.join(HOME, "TimeControlData")
 if not os.path.exists(PERSISTENCIA):
     os.mkdir(PERSISTENCIA)
+
 
 '''
 def __filter_fechas(fecha, mes):
@@ -34,9 +35,11 @@ def getFechas(primersemana, ultimasemana):
     cal = calendar.Calendar()
     fechas = []
     for mes in meses:
-        f = [item for item in cal.itermonthdates(anio, mes) if __filter_fechas(item, mes)]
+        f = [item for item in cal.itermonthdates(
+            anio, mes) if __filter_fechas(item, mes)]
         fechas.extend(f)
-    fechas = [item for item in fechas if __filter_fechas2(item, primersemana, ultimasemana)]
+    fechas = [item for item in fechas if __filter_fechas2(
+        item, primersemana, ultimasemana)]
     return fechas
 '''
 
@@ -56,26 +59,32 @@ def __getDatesModel():
     return _dict
 '''
 
+
 def __filterSemana(fecha, semana):
-    return (datetime.datetime.strptime(fecha , '%d/%m/%Y').isocalendar()[1] == semana)
+    return (datetime.datetime.strptime(
+        fecha, '%d/%m/%Y').isocalendar()[1] == semana)
+
 
 def getDataSemana(user, semana, data):
-    fechas = [item for item in data.get('horas', {}).keys() if __filterSemana(item, semana)]
+    fechas = [item for item in data.get(
+        'horas', {}).keys() if __filterSemana(item, semana)]
     _dict = OrderedDict()
     fs = []
     for fecha in fechas:
-        fs.append(datetime.datetime.strptime(fecha , '%d/%m/%Y'))
+        fs.append(datetime.datetime.strptime(fecha, '%d/%m/%Y'))
     fs.sort()
     for fecha in fs:
-        key = str(datetime.date.strftime(fecha , '%d/%m/%Y'))
+        key = str(datetime.date.strftime(fecha, '%d/%m/%Y'))
         _dict[key] = data['horas'][key]
     return _dict
-    
+
+
 def adduser(num, name):
     path = os.path.join(PERSISTENCIA, num)
-    if os.path.exists(path): return False
+    if os.path.exists(path):
+        return False
     archivo = open(path, "w")
-    _dict = {'nombre': name, 'horas': {}} #__getDatesModel()
+    _dict = {'nombre': name, 'horas': {}}  #__getDatesModel()
     archivo.write(json.dumps(
         _dict,
         indent=4,
@@ -83,6 +92,7 @@ def adduser(num, name):
         sort_keys=True))
     archivo.close()
     return True
+
 
 '''
 def getUsers():
@@ -106,7 +116,7 @@ def getDataUser(funcionario):
     for mes in meses:
         l.append(int(mes))
     l.sort()
-    
+
     # Ordenar fechas en OrderedDict
     for a in l: # lista de string que representa los meses
         ret[str(a)] = OrderedDict()
@@ -116,13 +126,14 @@ def getDataUser(funcionario):
         for f in fechas:
             lista.append(datetime.datetime.strptime(f , '%d/%m/%Y'))
         lista.sort()
-           
+
         for i in lista:
             fecha = datetime.date.strftime(i , '%d/%m/%Y')
             ret[str(a)][fecha] = _dict[str(a)][fecha]
-    
+
     return ret
 '''
+
 
 def getDataUser(num):
     path = os.path.join(PERSISTENCIA, num)
@@ -133,12 +144,13 @@ def getDataUser(num):
         arch.close()
     return _dict
 
+
 def addData(num, _new):
     _dict = getDataUser(num)
     if _dict:
         _dict['horas'][_new.keys()[0]] = _new[_new.keys()[0]]
         path = os.path.join(PERSISTENCIA, num)
-        archivo = open(path, "w") 
+        archivo = open(path, "w")
         archivo.write(json.dumps(
             _dict,
             indent=4,
@@ -148,13 +160,15 @@ def addData(num, _new):
         return True
     else:
         return False
-        
+
+
 def validateTime(_new):
     try:
         temp = time.strptime(_new, '%H:%M')
         return time.strftime('%H:%M', temp)
     except:
         return False
+
 
 def getDiferenciaHorasMinutos(inicio, final):
     # Recibe y devuelve datos en string listos para gardar y mostrar.
@@ -166,12 +180,14 @@ def getDiferenciaHorasMinutos(inicio, final):
     temp = time.strptime('00:00:00', '%H:%M:%S')
     if t2 > t1:
         # diferencia timedelta
-        # FIXME: Resultado negativo en este calculo agrega -1 day lo que provoca un error en el formato %H:%M
+        # FIXME: Resultado negativo en este calculo agrega -1 day
+        # lo que provoca un error en el formato %H:%M
         dif = str(t2 - t1)
         # string a time
         temp = time.strptime(dif, '%H:%M:%S')
         # time a string despreciando los segundos
     return time.strftime('%H:%M', temp)
+
 
 def getTotalHoras(values):
     temp = time.strptime('00:00', '%H:%M')
@@ -185,7 +201,8 @@ def getTotalHoras(values):
             dif += t2 - t1
     temp = time.strptime(str(dif), '%H:%M:%S')
     return time.strftime('%H:%M', temp)
-    
+
+
 '''
 def updateUser(user, _dict):
     path = os.path.join(PERSISTENCIA, user + '.json')

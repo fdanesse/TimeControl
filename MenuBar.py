@@ -54,15 +54,15 @@ class MenuBar(Gtk.MenuBar):
         frame.set_label('Nombre y Apellido')
         event = Gtk.EventBox()
         event.set_border_width(10)
-        nombre = Gtk.Entry() # FIXME: Validation entry.connect('changed', ...)
+        nombre = Gtk.Entry()  # FIXME: Validation entry.connect('changed', ...)
         event.add(nombre)
         frame.add(event)
-        
+
         hbox.pack_start(frame, False, True, 5)
-        
+
         dialog.vbox.pack_start(hbox, False, False, 5)
         dialog.vbox.show_all()
-        
+
         n = 0
         if dialog.run() == Gtk.ResponseType.ACCEPT:
             try:
@@ -71,4 +71,5 @@ class MenuBar(Gtk.MenuBar):
             except:
                 print 'FIXME: No se ingresó un número válido'
         dialog.destroy()
-        if n and nn: self.emit('newuser', n, nn)
+        if n and nn:
+            self.emit('newuser', n, nn)

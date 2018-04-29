@@ -61,7 +61,8 @@ class Tabla(Gtk.TreeView):
                 cellrender.connect('edited', self.__edited_Salida)
 
     def __edited_Entrada(self, widget, _old, _new):
-        if not _new: return
+        if not _new:
+            return
         val = validateTime(_new)
         if val:
             _iter = self.get_model().get_iter_first()
@@ -70,9 +71,10 @@ class Tabla(Gtk.TreeView):
             self.__calcular_saldo()
         else:
             self.__datosIncorrector()
-            
+
     def __edited_Salida(self, widget, _old, _new):
-        if not _new: return
+        if not _new:
+            return
         val = validateTime(_new)
         if val:
             _iter = self.get_model().get_iter_first()
@@ -106,7 +108,8 @@ class Tabla(Gtk.TreeView):
         _iter = self.get_model().get_iter_first()
         entrada = self.get_model().get_value(_iter, 3)
         salida = self.get_model().get_value(_iter, 4)
-        self.get_model().set_value(_iter, 5, getDiferenciaHorasMinutos(entrada, salida))
+        self.get_model().set_value(_iter, 5,
+            getDiferenciaHorasMinutos(entrada, salida))
 
     def set_data(self, fecha, num, _dict):
         nombre = _dict.get('nombre', '')

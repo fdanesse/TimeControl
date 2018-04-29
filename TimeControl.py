@@ -77,13 +77,13 @@ class TimeControl(Gtk.Window):
         if addData(str(num), _dict):
             label = Gtk.Label("Datos Almacenados.")
             self.__viewUser(None, num)
-        else:            
+        else:
             label = Gtk.Label("Este Funcionario no Existe")
         dialog.vbox.pack_start(label, True, True, 5)
         dialog.vbox.show_all()
         dialog.run()
         dialog.destroy()
-            
+
     def __get_date_to_string(self):
         res = self.calendario.get_date()
         f = '%s/%s/%s' % (res.day, res.month + 1, res.year)
@@ -97,8 +97,9 @@ class TimeControl(Gtk.Window):
         fecha = self.__get_date_to_string()
         data = getDataUser(str(num))
         self.tabla.set_data(fecha, num, data)
-        
-        semana = datetime.datetime.strptime(fecha , '%d/%m/%Y').isocalendar()[1]
+
+        semana = datetime.datetime.strptime(
+            fecha, '%d/%m/%Y').isocalendar()[1]
         self.tablasemana.set_data(semana, getDataSemana(num, semana, data))
 
     def __newUser(self, widget, num, name):
@@ -115,7 +116,7 @@ class TimeControl(Gtk.Window):
         dialog.run()
         dialog.destroy()
         self.__viewUser(None, num)
-        
+
     def __salir(self, widget=None, senial=None):
         Gtk.main_quit()
         sys.exit(0)
